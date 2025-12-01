@@ -8,7 +8,7 @@ class DialMove(
         Direction.LEFT
     } else Direction.RIGHT
 
-    private val unsignedDistance = rawMove.drop(1).toInt()
+    val unsignedDistance = rawMove.drop(1).toInt()
 
     val distance: Int = if (direction == Direction.LEFT) -unsignedDistance else {
         unsignedDistance
@@ -24,13 +24,24 @@ class DialMove(
 }
 
 class Dial(
-    val currentPosition: Int = 50
+    var currentPosition: Int = 50
 ) {
 
-    fun move(move: DialMove): Dial {
-        return Dial(
-            currentPosition = (100 + currentPosition + move.distance) % 100
-        )
+    var zeroClicks = 0
+
+    fun move(move: DialMove) {
+        val distToFirstZero = if (move.direction == DialMove.Direction.RIGHT) {
+            100 - currentPosition
+        } else {
+            if (currentPosition == 0) 100 else currentPosition
+        }
+
+        if (move.unsignedDistance >= distToFirstZero) {
+            zeroClicks += 1 + (move.unsignedDistance - distToFirstZero) / 100
+        }
+
+        val newPos = (currentPosition + move.distance) % 100
+        currentPosition = if (newPos < 0) newPos + 100 else newPos
     }
 
 }
@@ -40,16 +51,14 @@ fun day1() {
         DialMove(it)
     }
 
-    var dial = Dial()
+    val dial = Dial()
 
     println("The dial starts by pointing at ${dial.currentPosition}")
-    var count = 0
     for (move in moves) {
-        dial = dial.move(move)
+        dial.move(move)
         println("The dial is rotated $move to point at ${dial.currentPosition}.")
-        if (dial.currentPosition == 0) count++
     }
-    println("The dial password is: $count")
+    println("The dial password is: ${dial.zeroClicks}")
 }
 
 fun main() {
