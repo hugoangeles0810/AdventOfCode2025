@@ -6,14 +6,29 @@ fun day5() {
     val ranges = input.subList(0, separatorIdx).map {
         val (start, end) = it.split("-")
         LongRange(start.toLong(), end.toLong())
-    }
-    val items = input.subList(separatorIdx + 1, input.size).map(String::toLong)
+    }.sortedBy { it.start }
 
-    val result = items.count { id ->
-        ranges.any { id in it }
-    }
+    val union = mutableListOf<LongRange>()
+    var currentRange = ranges.first()
 
-    println(result)
+    for (i in 1 until ranges.size) {
+        val nextRange = ranges[i]
+
+        if (nextRange overlaps currentRange) {
+            val newEnd = maxOf(currentRange.last, nextRange.last)
+            currentRange = currentRange.first..newEnd
+        } else {
+            union.add(currentRange)
+            currentRange = nextRange
+        }
+    }
+    union.add(currentRange)
+
+    println(union.sumOf { it.last - it.first + 1 })
+}
+
+private infix fun LongRange.overlaps(other: LongRange): Boolean {
+    return maxOf(this.first, other.first) <= minOf(this.last, other.last)
 }
 
 fun main() {
